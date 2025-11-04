@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de IMC con Rutinas y Dietas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 30px;
+            background: #f9f9f9;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: none;
+            background: #3498db;
+            color: white;
+            transition: 0.3s;
+        }
+
+            button:hover {
+                background: #2980b9;
+            }
+
+        #resultado {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #recomendaciones {
+            margin-top: 20px;
+            text-align: left;
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #rutina-navegacion {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        canvas {
+            margin-top: 30px;
+        }
+
+        h3 {
+            color: #2c3e50;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        .dieta {
+            background: #eef6ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de IMC</h1>
+
+        <input type="number" id="peso" placeholder="Peso en kg">
+        <input type="number" id="estatura" placeholder="Estatura en metros">
+
+        <br>
+        <button onclick="calcularIMC()">Calcular</button>
+        <button onclick="limpiar()">Limpiar</button>
+        <button onclick="salir()">Salir</button>
+
+        <div id="resultado"></div>
+        <div id="recomendaciones"></div>
+
+        <canvas id="graficaIMC" width="400" height="300"></canvas>
+    </div>
+
+    <script>
+        let chart;
+        let rutinas = [];
+        let indiceRutina = 0;
+        let dietaHTML = "";
+
+        function calcularIMC() {
+            const peso = parseFloat(document.getElementById('peso').value);
+            const estatura = parseFloat(document.getElementById('estatura').value);
+            const resultado = document.getElementById('resultado');
+            const recomendaciones = document.getElementById('recomendaciones');
+
+            if (isNaN(peso) || isNaN(estatura) || peso <= 0 || estatura <= 0) {
+                resultado.textContent = "Por favor, ingresa valores válidos.";
+                recomendaciones.innerHTML = "";
+                return;
+            }
+
+            const imc = peso / (estatura * estatura);
+            let categoria = "";
+
+            rutinas = [];
+            indiceRutina = 0;
+
+            if (imc < 18.5) {
+                categoria = "Bajo peso";
+                rutinas = [
+                    { nombre: "Fuerza con pesas", descripcion: "Ejercicios de fuerza 3 veces por semana (pesas o bandas elásticas)." },
+                    { nombre: "Rutina de cuerpo completo", descripcion: "Trabaja todo el cuerpo 4 veces por semana con series cortas." },
+                    { nombre: "Yoga activo", descripcion: "Mejora flexibilidad y apetito con 30 minutos diarios." },
+                    { nombre: "Calistenia básica", descripcion: "Flexiones, planchas y sentadillas con tu propio peso." },
+                    { nombre: "Cardio ligero", descripcion: "Caminatas suaves para estimular el metabolismo." }
+                ];
+                dietaHTML = `
+              <div class="dieta">
+                <h3>Dieta para ganar peso</h3>
+                <ul>
+                  <li><strong>Desayuno:</strong> Avena con leche, plátano, miel y nueces.</li>
+                  <li><strong>Comida:</strong> Arroz con pollo y verduras + aguacate.</li>
+                  <li><strong>Cena:</strong> Pasta con atún, queso y aceite de oliva.</li>
+                  <li><strong>Snacks:</strong> Batido de proteína, yogurt griego o frutos secos.</li>
+                </ul>
+              </div>`;
+            }
+            else if (imc < 24.9) {
+                categoria = "Peso normal";
+                rutinas = [
+                    { nombre: "Entrenamiento funcional", descripcion: "Ejercicios combinados de fuerza y coordinación." },
+                    { nombre: "Cardio moderado", descripcion: "Corre o camina rápido 30 minutos 4 veces por semana." },
+                    { nombre: "Fuerza + flexibilidad", descripcion: "Alterna pesas con estiramientos." },
+                    { nombre: "Deporte recreativo", descripcion: "Juega fútbol, natación o tenis regularmente." },
+                    { nombre: "Yoga y respiración", descripcion: "Sesiones de relajación y control corporal." }
+                ];
+                dietaHTML = `
+              <div class="dieta">
+                <h3>Dieta equilibrada</h3>
+                <ul>
+                  <li><strong>Desayuno:</strong> Pan integral con aguacate y huevo.</li>
+                  <li><strong>Comida:</strong> Filete de pescado, arroz y ensalada verde.</li>
+                  <li><strong>Cena:</strong> Pechuga a la plancha con verduras al vapor.</li>
+                  <li><strong>Snacks:</strong> Fruta fresca o yogurt natural.</li>
+                </ul>
+              </div>`;
+            }
+            else if (imc < 29.9) {
+                categoria = "Sobrepeso";
+                rutinas = [
+                    { nombre: "Caminata rápida", descripcion: "45 minutos al día, aumentando ritmo cada semana." },
+                    { nombre: "Entrenamiento en circuito", descripcion: "Alterna cardio con fuerza ligera." },
+                    { nombre: "Natación", descripcion: "De bajo impacto, mejora resistencia y quema grasa." },
+                    { nombre: "Elíptica o bici estática", descripcion: "Sesiones de 30-40 minutos." },
+                    { nombre: "Rutina HIIT leve", descripcion: "Intervalos cortos de 20 minutos para quemar grasa." }
+                ];
+                dietaHTML = `
+              <div class="dieta">
+                <h3>Dieta para reducir peso</h3>
+                <ul>
+                  <li><strong>Desayuno:</strong> Avena con agua, frutas y semillas.</li>
+                  <li><strong>Comida:</strong> Pollo al vapor con quinoa y verduras.</li>
+                  <li><strong>Cena:</strong> Sopa de verduras o ensalada con atún.</li>
+                  <li><strong>Snacks:</strong> Frutas bajas en azúcar o frutos secos.</li>
+                </ul>
+              </div>`;
+            }
+            else if (imc < 34.9) {
+                categoria = "Obesidad grado I";
+                rutinas = [
+                    { nombre: "Caminatas diarias", descripcion: "Empieza con 20 minutos y aumenta gradualmente." },
+                    { nombre: "Ejercicios acuáticos", descripcion: "Excelente para articulaciones y control de peso." },
+                    { nombre: "Movilidad básica", descripcion: "Movimientos articulares y estiramientos suaves." },
+                    { nombre: "Ejercicios con silla", descripcion: "Ayudan a mejorar fuerza sin sobrecargar el cuerpo." },
+                    { nombre: "Yoga para principiantes", descripcion: "Mejora equilibrio y relajación." }
+                ];
+                dietaHTML = `
+              <div class="dieta">
+                <h3>Dieta para controlar peso</h3>
+                <ul>
+                  <li><strong>Desayuno:</strong> Tostadas integrales con queso fresco y tomate.</li>
+                  <li><strong>Comida:</strong> Pescado al horno con brócoli y arroz integral.</li>
+                  <li><strong>Cena:</strong> Crema de verduras o ensalada de pollo.</li>
+                  <li><strong>Snacks:</strong> Yogurt natural o una manzana.</li>
+                </ul>
+              </div>`;
+            }
+            else {
+                categoria = "Obesidad grado II o III";
+                rutinas = [
+                    { nombre: "Caminatas suaves", descripcion: "Empieza con 10 minutos al día y aumenta progresivamente." },
+                    { nombre: "Ejercicios de respiración", descripcion: "Controla el ritmo y mejora la oxigenación." },
+                    { nombre: "Movimientos en agua", descripcion: "Permiten ejercitarte sin impacto articular." },
+                    { nombre: "Ejercicios sentados", descripcion: "Con bandas o pesas pequeñas." },
+                    { nombre: "Estiramientos básicos", descripcion: "Ayudan a mantener movilidad." }
+                ];
+                dietaHTML = `
+              <div class="dieta">
+                <h3>Dieta saludable para reducir grasa</h3>
+                <ul>
+                  <li><strong>Desayuno:</strong> Smoothie verde con espinaca, manzana y avena.</li>
+                  <li><strong>Comida:</strong> Pechuga de pollo con ensalada grande y legumbres.</li>
+                  <li><strong>Cena:</strong> Verduras cocidas y pescado a la plancha.</li>
+                  <li><strong>Snacks:</strong> Pepino, zanahorias o una gelatina sin azúcar.</li>
+                </ul>
+              </div>`;
+            }
+
+            resultado.innerHTML = `Tu IMC es <strong>${imc.toFixed(2)}</strong>: ${categoria}`;
+            mostrarRutinaActual();
+            recomendaciones.innerHTML += dietaHTML;
+            mostrarGrafica(imc);
+        }
+
+        function mostrarRutinaActual() {
+            const recomendaciones = document.getElementById('recomendaciones');
+            const rutina = rutinas[indiceRutina];
+            recomendaciones.innerHTML = `
+            <h3>Rutina recomendada: ${rutina.nombre}</h3>
+            <p>${rutina.descripcion}</p>
+            <div id="rutina-navegacion">
+              <button onclick="anteriorRutina()">⬅ Anterior</button>
+              <button onclick="siguienteRutina()">Siguiente ➡</button>
+            </div>
+          `;
+        }
+
+        function siguienteRutina() {
+            indiceRutina = (indiceRutina + 1) % rutinas.length;
+            mostrarRutinaActual();
+        }
+
+        function anteriorRutina() {
+            indiceRutina = (indiceRutina - 1 + rutinas.length) % rutinas.length;
+            mostrarRutinaActual();
+        }
+
+        function limpiar() {
+            document.getElementById('peso').value = "";
+            document.getElementById('estatura').value = "";
+            document.getElementById('resultado').textContent = "";
+            document.getElementById('recomendaciones').innerHTML = "";
+            if (chart) chart.destroy();
+        }
+
+        function salir() {
+            if (confirm("¿Estás seguro que deseas salir?")) {
+                window.close();
+            }
+        }
+
+        function mostrarGrafica(imcUsuario) {
+            const ctx = document.getElementById('graficaIMC').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Bajo peso', 'Normal', 'Sobrepeso', 'Obesidad I', 'Obesidad II/III', 'Tu IMC'],
+                    datasets: [{
+                        label: 'Rango IMC',
+                        data: [18.4, 24.9, 29.9, 34.9, 40, imcUsuario],
+                        backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#9b59b6']
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, suggestedMax: 45 } } }
+            });
+        }
+    </script>
+</body>
+</html>
